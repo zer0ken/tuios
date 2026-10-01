@@ -356,6 +356,7 @@ a working negative control look like a broken one for half an hour.
 | A panel closed while a lone pane was fullscreen kept its hit area, which took the motion over its old rectangle from the pane | n/a, injected | drop the `m.OverlayHits = m.OverlayHits[:0]` from the fast path in `composeFrame` (`internal/app/render.go`) | `TestSGRPixelMouseAfterTheEditor/standalone` and `/daemon` ("the pane never got the report"; nothing reached the pane after the palette closed) | **caught** |
 | A Crush permission dialog stays on working when Crush reports working after blocked | n/a, injected, cuts the wiring | drop the `claim.screenWins` branch from `blockerOverridesClaim` in `internal/session/agent_state.go` | `TestCrushPermissionAnsweredFromTheInbox` ("the pane is {State:working ... Source:report ...}, want state needs_input") | **caught** |
 | The Inbox cannot answer a Crush permission dialog | n/a, injected, cuts the wiring | drop the `[screen.rule.answers]` block from `internal/harness/manifests/crush.toml` | `TestCrushPermissionAnsweredFromTheInbox` ("the pane never showed [ALLOWED]") | **caught** |
+| An Inbox row with a long pane name shows no summary | n/a, injected, cuts the wiring | drop the name-width cap from `inboxItemRow` in `internal/app/render_inbox.go` | `TestCrushPermissionAnsweredFromTheInbox` ("the Inbox never listed the Crush approval with its summary") | **caught** |
 
 ### The mouse row is a whole-change control, not a single-hunk one
 
