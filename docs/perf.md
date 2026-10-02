@@ -2124,10 +2124,11 @@ of the bytes), which is upstream.
 ### Binary size budget
 
 `.github/workflows/binary-size.yml` runs `scripts/binary-size.sh` on every pull
-request and push to main. It builds tuios the way the release does
-(`CGO_ENABLED=0`, `-trimpath`, `-ldflags "-s -w"`) for linux/amd64 and
-darwin/arm64 with the Go version go.mod names, prints the size, and fails when
-a binary is over its budget.
+request and push to main. It builds tuios and tuios-slim the way the release
+does (`CGO_ENABLED=0`, `-trimpath`, `-ldflags "-s -w"`) for linux/amd64 and
+darwin/arm64 with the Go version go.mod names, prints the sizes, and fails when
+a binary is over its budget. tuios-slim is cmd/tuios with the slim build tag;
+see [SLIM.md](SLIM.md).
 
 | target | size at 62ec9c0c (Go 1.26.6) | budget | before the size cuts (e632e021) |
 |---|---|---|---|
@@ -2187,6 +2188,22 @@ after the graphics fixes (#342, #344) and the session cleanup (#334) landed
 together. That brought the build to 27,959,458 and 26,399,730 bytes
 (Go 1.26.6): 542 bytes under and 4,730 bytes over the old budgets. Each PR fit
 on its own; the sum did not.
+
+The budgets went to 28,030,000 (linux/amd64) and 26,465,000 (darwin/arm64)
+when tuios-slim came in. The full build moved its feature commands and state
+behind seams so the slim tag can leave them out. Its symbols did not grow. The
+function table grew with the new files and functions, which brought the build
+to 28,004,514 and 26,433,826 bytes (Go 1.26.6), 12,288 and 16,672 bytes more
+than main.
+
+| binary | target | size (Go 1.26.6) | budget |
+|---|---|---|---|
+| tuios-slim | linux/amd64 | 17,117,346 | 17,630,000 |
+| tuios-slim | darwin/arm64 | 16,281,906 | 16,770,000 |
+
+The tuios-slim budgets are about 3% above the size they were set at. A change
+that puts a dropped feature back into tuios-slim, or that links one of its
+packages again, fails the job.
 
 To raise a budget, do it on purpose in its own commit: run
 `scripts/binary-size.sh` on the Go version in go.mod, set the new budget a
