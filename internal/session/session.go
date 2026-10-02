@@ -782,6 +782,13 @@ type PTY struct {
 	// Single-goroutine VT writer channel. Closed by readOutput on exit so
 	// vtWriter's range terminates.
 	vtWriteChan chan vtChunk
+	// focusReporting is whether the guest had focus reporting on after the
+	// last write to the emulator. Only vtWriter reads and writes it. See
+	// focus_report.go.
+	focusReporting bool
+	// hasFocus reports whether this pane has focus. Nil for a PTY made
+	// outside a session. See Session.paneHasFocus.
+	hasFocus func() bool
 
 	// streamMu puts a resize at one position in the pane's stream. readOutput
 	// holds it across appending a chunk, broadcasting it and queueing it for
@@ -1204,6 +1211,9 @@ type Session struct {
 	// machine, so the daemon can hold the pane's report channel. Guarded by
 	// ptysMu, like fed. See hosted_calls.go.
 	onRemotePane func(windowID string, p *remotePane)
+	// hostShown reports whether the session is on a screen. See
+	// SetHostShownProbe.
+	hostShown atomic.Pointer[func() bool]
 }
 
 // SetGraphicsCapabilities records the graphics protocols tuios can forward to
@@ -1712,6 +1722,7 @@ func (s *Session) createPTY(windowID string, width, height int, cwd string, comm
 	// Per-PTY control-plane event emitter, pre-tagged with this window and PTY
 	// ID. It routes through the session's event sink so events reach the daemon's
 	// event hub; when no sink is installed it is a cheap no-op.
+	pty.hasFocus = func() bool { return s.paneHasFocus(windowID) }
 	pty.emit = func(ev SessionEvent) {
 		ev.Window = windowID
 		ev.PTYID = id
@@ -4480,7 +4491,9 @@ func (p *PTY) vtWriter() {
 		// disagree. That pairing is what lets a client be resumed exactly where
 		// the snapshot it was handed ends.
 		p.vtSeq = chunk.seq
+		focusOn := p.terminal != nil && p.terminal.FocusReportingEnabled()
 		p.terminalMu.Unlock()
+		p.noteFocusReporting(focusOn)
 	}
 }
 

@@ -738,6 +738,15 @@ func (w *Window) handleIOOperations() {
 					w.ioMu.Lock()
 					if w.Terminal != nil {
 						_, _ = w.Terminal.Write(buf[:n])
+						// A guest that turns on focus reporting is told at once
+						// that it has focus, as xterm and kitty do. Only the
+						// focused state is sent: tuios does not report focus
+						// changes, so an unfocused report would never be undone.
+						on := w.Terminal.FocusReportingEnabled()
+						if on && !w.focusReporting && w.hasFocus.Load() {
+							w.Terminal.WriteResponse([]byte("\x1b[I"))
+						}
+						w.focusReporting = on
 					}
 					w.ioMu.Unlock()
 
