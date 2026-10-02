@@ -2131,8 +2131,8 @@ a binary is over its budget.
 
 | target | size at 62ec9c0c (Go 1.26.6) | budget | before the size cuts (e632e021) |
 |---|---|---|---|
-| linux/amd64 | 25,182,370 | 27,960,000 (raised at 27,930,786) | 26,681,504 |
-| darwin/arm64 | 23,834,594 | 26,395,000 (raised at 26,365,842) | 25,265,154 |
+| linux/amd64 | 25,182,370 | 28,050,000 (raised at 28,016,802) | 26,681,504 |
+| darwin/arm64 | 23,834,594 | 26,480,000 (raised at 26,450,370) | 25,265,154 |
 
 The budgets are about 3% above the size they were set at and below the size
 before the size cuts, so undoing those cuts fails the job.
@@ -2187,6 +2187,12 @@ after the graphics fixes (#342, #344) and the session cleanup (#334) landed
 together. That brought the build to 27,959,458 and 26,399,730 bytes
 (Go 1.26.6): 542 bytes under and 4,730 bytes over the old budgets. Each PR fit
 on its own; the sum did not.
+
+The budgets went to 28,050,000 (linux/amd64) and 26,480,000 (darwin/arm64)
+when answering Crush's permission dialog from the Inbox (the dialog reader,
+the Crush claim override, the process check and the Inbox row width) brought
+the build to 28,016,802 and 26,450,370 bytes (Go 1.26.6), 24,576 and 33,200
+bytes more than main, which was 27,992,226 and 26,417,170 bytes.
 
 To raise a budget, do it on purpose in its own commit: run
 `scripts/binary-size.sh` on the Go version in go.mod, set the new budget a
